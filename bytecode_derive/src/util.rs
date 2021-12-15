@@ -14,14 +14,14 @@ pub fn compile_instr(v: usize) -> TokenStream {
         // higher byte and lower byte of u16
         // just need to set the MSB for the first byte to indicate that this is
         // a 2 byte spanning instruction
-        let [higher_byte, lower_byte] = split_into_bytes(v);
+        let [higher_byte, lower_byte] = split_into_instr_bytes(v);
         quote! {
             vec![#higher_byte , #lower_byte]
         }
     }
 }
 
-pub fn split_into_bytes(v: usize) -> [u8; 2] {
+pub fn split_into_instr_bytes(v: usize) -> [u8; 2] {
     let higher_byte = ((v >> 8) as u8) | 1 << 7;
     let lower_byte = v as u8 & u8::MAX;
     [higher_byte, lower_byte]

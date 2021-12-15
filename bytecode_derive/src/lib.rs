@@ -74,10 +74,9 @@ pub fn derive(input: TokenStream) -> TokenStream {
         if i < 1 << 7 {
             let var = &input_enum.variants[i];
             let i = i as u8;
-
             single_byte_parse_logic.push(quote! {
                 #i => {
-                    return std::result::Result::Ok(#name::#var);
+                    return std::result::Result::Ok((#name::#var,1));
                 }
             });
         } else {
@@ -94,14 +93,14 @@ pub fn derive(input: TokenStream) -> TokenStream {
         // values, so the output is ordered, and easier to debug
         let mut hm: BTreeMap<u8, Vec<_>> = BTreeMap::new();
         for i in 1 << 7..max_possible_instructions {
-            let [higher_byte, lower_byte] = util::split_into_bytes(i);
+            let [higher_byte, lower_byte] = util::split_into_instr_bytes(i);
             let entry = hm.entry(higher_byte).or_default();
             entry.push((lower_byte, &input_enum.variants[i]));
         }
         for (higher_byte, list) in hm.into_iter() {
             let lower_byte_matches = list.into_iter().map(|(lower_byte, v)| {
                 quote! {
-                    #lower_byte =>{return std::result::Result::Ok(#name::#v)}
+                    #lower_byte =>{return std::result::Result::Ok((#name::#v,2))}
                 }
             });
             two_byte_parse_logic.push(quote! {
@@ -124,9 +123,9 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 }
             }
 
-            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<#name,bytecode_trait::BytecodeError>{
+            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<(#name,usize),bytecode_trait::BytecodeError>{
                 if #parse_fn_param_name.len() < 1 {
-                    return std::result::Result::Err(bytecode_trait::BytecodeError::Other("Slice length must be atleast 1"));
+                    return std::result::Result::Err(bytecode_trait::BytecodeError::EmptyInstruction);
                 }
                 #parse_check_logic
 
