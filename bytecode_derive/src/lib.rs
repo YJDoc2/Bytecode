@@ -46,21 +46,21 @@ pub fn derive(input: TokenStream) -> TokenStream {
         let _max = max_possible_instructions as u8;
         quote! {
             if #parse_fn_param_name[0] > #_max{
-                return std::result::Result::Err(bytecode_traits::BytecodeError::InvalidInstruction);
+                return std::result::Result::Err(bytecode_trait::BytecodeError::InvalidInstruction);
             }
         }
     } else {
         let _max = max_possible_instructions as u16;
         quote! {
             if #parse_fn_param_name[0] > 1<< 7 && #parse_fn_param_name.len() < 2{
-                return std::result::Result::Err(bytecode_traits::BytecodeError::InvalidInstruction);
+                return std::result::Result::Err(bytecode_trait::BytecodeError::InvalidInstruction);
             }
             if #parse_fn_param_name[0] > 1<< 7{
                 let higher_byte:u8 = #parse_fn_param_name[0] & (1<<7 -1);
                 let lower_byte:u8 = #parse_fn_param_name[1];
                 let instr:u16 = (higher_byte as u16) << 8 | lower_byte as u16;
                 if instr > #_max {
-                    return std::result::Result::Err(bytecode_traits::BytecodeError::InvalidInstruction);
+                    return std::result::Result::Err(bytecode_trait::BytecodeError::InvalidInstruction);
                 }
             }
         }
@@ -117,16 +117,16 @@ pub fn derive(input: TokenStream) -> TokenStream {
     let two_byte_parse_logic = two_byte_parse_logic.iter();
 
     let output = quote! {
-        impl bytecode_traits::Bytecodable for #name{
+        impl bytecode_trait::Bytecodable for #name{
             fn compile(&self)->Vec<u8>{
                 match self {
                     #(#compiled ),*
                 }
             }
 
-            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<#name,bytecode_traits::BytecodeError>{
+            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<#name,bytecode_trait::BytecodeError>{
                 if #parse_fn_param_name.len() < 1 {
-                    return std::result::Result::Err(bytecode_traits::BytecodeError::Other("Slice length must be atleast 1"));
+                    return std::result::Result::Err(bytecode_trait::BytecodeError::Other("Slice length must be atleast 1"));
                 }
                 #parse_check_logic
 

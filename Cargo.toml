@@ -1,19 +1,11 @@
-[package]
-name = "bytecode"
-version = "0.0.0"
-edition = "2018"
+[workspace]
+members = [
+    "bytecode",
+    "bytecode_derive",
+    "bytecode_trait",
+    "bytecode_test"
+]
 
-[lib]
-name = "bytecode"
-proc-macro = true
 
-[[bin]]
-name="bytecode_test"
-path="src/main.rs"
-
-[dependencies]
-syn = {version = "1.0.82", features=["extra-traits"] }
-quote = "1.0.10"
-proc-macro2 = "1.0.33"
-bytecode_traits = {path="./bytecode_traits"}
-seq-macro = "0.2.2"
+[profile.release]
+lto = true

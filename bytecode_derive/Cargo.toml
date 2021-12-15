@@ -1,0 +1,15 @@
+[package]
+name = "bytecode_derive"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+name = "bytecode_derive"
+proc-macro = true
+
+[dependencies]
+syn = {version = "1.0.82", features=["extra-traits"] }
+quote = "1.0.10"
+proc-macro2 = "1.0.33"
+bytecode_trait = {path="../bytecode_trait"}
+seq-macro = "0.2.2"
