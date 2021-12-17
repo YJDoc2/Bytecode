@@ -32,16 +32,45 @@ pub fn derive(input: TokenStream) -> TokenStream {
             input_enum.variants.len()
         );
     }
+    // dbg!(&input_enum.variants);
 
     let compiled = input_enum.variants.iter().enumerate().map(|(i, v)| {
         let ident = &v.ident;
-        let v = util::compile_instr(i);
-        quote! {
-            #name::#ident => {#v}
+        let instr = util::compile_instr(i);
+        match &v.fields {
+            syn::Fields::Unit => {
+                quote! {
+                    #name::#ident => {#instr}
+                }
+            }
+            syn::Fields::Unnamed(fields) => {
+                let field_list = fields
+                    .unnamed
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| Ident::new(&format!("v{}", i), ident.span()));
+                let fields_compiled = field_list.clone().map(|f| {
+                    quote! {
+                        #f.compile()
+                    }
+                });
+                let field_list_bracketed = quote! {
+                    (#(#field_list),*)
+                };
+                quote! {
+                    #name::#ident #field_list_bracketed => {
+                        let mut _i = #instr;
+                        #(_i.extend(&#fields_compiled);)*
+                        return _i;
+                    }
+                }
+            }
+            _ => unimplemented!(),
         }
     });
 
     let parse_fn_param_name = Ident::new("bytes", name.span());
+
     let parse_check_logic = if max_possible_instructions <= 1 << 7 {
         let _max = max_possible_instructions as u8;
         quote! {
@@ -73,10 +102,43 @@ pub fn derive(input: TokenStream) -> TokenStream {
     for i in 0..max_possible_instructions {
         if i < 1 << 7 {
             let var = &input_enum.variants[i];
+            let ident = &var.ident;
+            let parsed = match &var.fields {
+                syn::Fields::Unit => {
+                    quote! {
+                        return std::result::Result::Ok((#name::#var,1));
+                    }
+                }
+                syn::Fields::Unnamed(fields) => {
+                    let size_counter_var = Ident::new("_count", ident.span());
+                    let field_list = fields
+                        .unnamed
+                        .iter()
+                        .enumerate()
+                        .map(|(i, _)| Ident::new(&format!("v{}", i), ident.span()));
+                    let field_parsed_list =
+                        fields.unnamed.iter().zip(field_list.clone()).map(|(f, v)| {
+                            quote! {
+                                let (#v,size) = #f::parse(&#parse_fn_param_name[#size_counter_var..])?;
+                                #size_counter_var += size;
+                            }
+                        });
+                    let field_list_bracketed = quote! {
+                        #name::#ident(#(#field_list),*)
+                    };
+                    quote! {
+                        let mut #size_counter_var :usize = 1;
+                        #(#field_parsed_list)*
+                        return std::result::Result::Ok((#field_list_bracketed,#size_counter_var));
+                    }
+                }
+                _ => unimplemented!(),
+            };
             let i = i as u8;
+            // add conditional parse logic depending on unit type or unnamed type
             single_byte_parse_logic.push(quote! {
                 #i => {
-                    return std::result::Result::Ok((#name::#var,1));
+                    #parsed
                 }
             });
         } else {
@@ -98,9 +160,41 @@ pub fn derive(input: TokenStream) -> TokenStream {
             entry.push((lower_byte, &input_enum.variants[i]));
         }
         for (higher_byte, list) in hm.into_iter() {
-            let lower_byte_matches = list.into_iter().map(|(lower_byte, v)| {
+            let lower_byte_matches = list.into_iter().map(|(lower_byte, var)| {
+                let ident = &var.ident;
+                let parsed = match &var.fields {
+                    syn::Fields::Unit => {
+                        quote! {
+                            return std::result::Result::Ok((#name::#var,1));
+                        }
+                    }
+                    syn::Fields::Unnamed(fields) => {
+                        let size_counter_var = Ident::new("_count", ident.span());
+                        let field_list = fields
+                            .unnamed
+                            .iter()
+                            .enumerate()
+                            .map(|(i, _)| Ident::new(&format!("v{}", i), ident.span()));
+                        let field_parsed_list =
+                            fields.unnamed.iter().zip(field_list.clone()).map(|(f, v)| {
+                                quote! {
+                                    let (#v,size) = #f::parse(&#parse_fn_param_name[#size_counter_var..])?;
+                                    #size_counter_var += size;
+                                }
+                            });
+                        let field_list_bracketed = quote! {
+                            #name::#ident(#(#field_list),*)
+                        };
+                        quote! {
+                            let mut #size_counter_var :usize = 2;
+                            #(#field_parsed_list)*
+                            return std::result::Result::Ok((#field_list_bracketed,#size_counter_var));
+                        }
+                    }
+                    _ => unimplemented!(),
+                };
                 quote! {
-                    #lower_byte =>{return std::result::Result::Ok((#name::#v,2))}
+                    #lower_byte =>{#parsed}
                 }
             });
             two_byte_parse_logic.push(quote! {
@@ -110,7 +204,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                         _ => unreachable!()
                     }
                 }
-            })
+            });
         }
     }
     let two_byte_parse_logic = two_byte_parse_logic.iter();

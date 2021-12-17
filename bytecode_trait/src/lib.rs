@@ -141,3 +141,43 @@ impl Bytecodable for bool {
         u8::parse(bytes).map(|(x, s)| (x != 0, s))
     }
 }
+
+// using usize should be avoided as the compiled bytecode will not be portable across arch
+// fixed size type should be used instead, These implementations are given as to
+// complete all numerical primitive types
+
+#[cfg(target_pointer_width = "16")]
+impl Bytecodable for usize {
+    fn compile(&self) -> Vec<u8> {
+        (*self as u16).compile()
+    }
+    // this is dicey, as this essentially mimics
+    // C style truth/false value
+    fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
+        u6::parse(bytes).map(|(x, s)| (x as usize, s))
+    }
+}
+
+#[cfg(target_pointer_width = "32")]
+impl Bytecodable for usize {
+    fn compile(&self) -> Vec<u8> {
+        (*self as u32).compile()
+    }
+    // this is dicey, as this essentially mimics
+    // C style truth/false value
+    fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
+        u32::parse(bytes).map(|(x, s)| (x as usize, s))
+    }
+}
+
+#[cfg(target_pointer_width = "64")]
+impl Bytecodable for usize {
+    fn compile(&self) -> Vec<u8> {
+        (*self as u64).compile()
+    }
+    // this is dicey, as this essentially mimics
+    // C style truth/false value
+    fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
+        u64::parse(bytes).map(|(x, s)| (x as usize, s))
+    }
+}

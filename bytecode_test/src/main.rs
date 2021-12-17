@@ -1,13 +1,19 @@
 use bytecode::*;
+use seq_macro::seq;
 
 #[derive(Bytecode)]
-#[allow(non_camel_case_types)]
-pub enum cpu_bytecode {
-    I1,
-    I2,
-    I3,
-    I4,
-    I5,
+pub enum Reg {
+    A,
+    B,
+    C,
 }
+
+seq!(N in 0..250{
+    #[derive(Bytecode)]
+    #[allow(non_camel_case_types)]
+    pub enum cpu_bytecode {
+        #(I#N(u8, u8,Reg),)*
+    }
+});
 
 fn main() {}
