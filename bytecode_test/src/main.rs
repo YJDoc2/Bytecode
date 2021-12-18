@@ -8,7 +8,7 @@ pub enum Reg {
     C,
 }
 
-seq!(N in 0..250{
+seq!(N in 0..10{
     #[derive(Bytecode)]
     #[allow(non_camel_case_types)]
     pub enum cpu_bytecode {
