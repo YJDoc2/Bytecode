@@ -18,6 +18,10 @@ pub enum Reg {
 
 #[derive(Bytecode)]
 #[allow(non_camel_case_types)]
-struct bytes(u8, Reg, u8);
+struct bytes {
+    x: u8,
+    y: Reg,
+    z: u8,
+}
 
 fn main() {}
