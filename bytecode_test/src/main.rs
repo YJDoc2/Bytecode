@@ -1,12 +1,12 @@
 use bytecode::*;
 use seq_macro::seq;
 
-// #[derive(Bytecode)]
-// pub enum Reg {
-//     A,
-//     B,
-//     C,
-// }
+#[derive(Bytecode)]
+pub enum Reg {
+    A,
+    B,
+    C,
+}
 
 // #[derive(Bytecode)]
 // #[allow(non_camel_case_types)]
@@ -17,6 +17,7 @@ use seq_macro::seq;
 // }
 
 #[derive(Bytecode)]
-struct bytes(u8, u8);
+#[allow(non_camel_case_types)]
+struct bytes(u8, Reg, u8);
 
 fn main() {}
