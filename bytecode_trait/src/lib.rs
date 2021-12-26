@@ -20,6 +20,7 @@ impl Bytecodable for u8 {
         Vec::from(self.to_le_bytes())
     }
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
+        #[allow(clippy::len_zero)]
         if bytes.len() < 1 {
             return Err(BytecodeError::InvalidInstruction);
         }
@@ -72,6 +73,7 @@ impl Bytecodable for i8 {
         Vec::from(self.to_le_bytes())
     }
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
+        #[allow(clippy::len_zero)]
         if bytes.len() < 1 {
             return Err(BytecodeError::InvalidInstruction);
         }

@@ -217,73 +217,13 @@ fn parse_single_byte(
     param_name: &syn::Ident,
     variant: &syn::Variant,
 ) -> proc_macro2::TokenStream {
-    let ident = &variant.ident;
+    let variant_name = &variant.ident;
     match &variant.fields {
-        syn::Fields::Unit => {
-            quote! {
-                return std::result::Result::Ok((#enum_name::#variant,1));
-            }
-        }
+        syn::Fields::Unit => parse_unit_field(enum_name, variant_name, 1),
         syn::Fields::Unnamed(fields) => {
-            let size_counter_var = Ident::new("_count", ident.span());
-            let field_list = fields
-                .unnamed
-                .iter()
-                .enumerate()
-                .map(|(i, _)| Ident::new(&format!("v{}", i), ident.span()));
-            let field_parsed_list = fields.unnamed.iter().zip(field_list.clone()).map(|(f, v)| {
-                quote! {
-                    let (#v,size) = #f::parse(&#param_name[#size_counter_var..])?;
-                    #size_counter_var += size;
-                }
-            });
-            let field_list_bracketed = quote! {
-                #enum_name::#ident(#(#field_list),*)
-            };
-            quote! {
-                let mut #size_counter_var :usize = 1;
-                #(#field_parsed_list)*
-                return std::result::Result::Ok((#field_list_bracketed,#size_counter_var));
-            }
+            parse_unnamed_field(fields, enum_name, variant_name, param_name, 1)
         }
-        syn::Fields::Named(named) => {
-            let fields = &named.named;
-            let fields_compiled = fields.iter().map(|f| {
-                let ident = &f.ident;
-                quote! {
-                    self.#ident.compile()
-                }
-            });
-
-            let compiled = quote! {
-                let mut _i = std::vec::Vec::new();
-                #(_i.extend(&#fields_compiled);)*
-                return _i;
-            };
-            let size_counter_var = syn::Ident::new("_count", enum_name.span());
-            let parse_fn_param_name = syn::Ident::new("__bytes", enum_name.span());
-
-            let parsed = fields.iter().map(|f| {
-                let ident = f.ident.as_ref().unwrap();
-                let ty = &f.ty;
-                quote! {
-                    let (#ident,size) = #ty::parse(&#parse_fn_param_name[#size_counter_var..])?;
-                    #size_counter_var += size;
-                }
-            });
-
-            let field_name_list = fields.iter().map(|f| f.ident.as_ref().unwrap());
-
-            quote! {
-                let mut #size_counter_var = 0;
-                #(#parsed)*
-                let _t = #enum_name::#ident{
-                    #(#field_name_list),*
-                };
-                std::result::Result::Ok((_t,#size_counter_var))
-
-            }
-        }
+        syn::Fields::Named(fields) => parse_named_field(fields, enum_name, variant_name, 1),
     }
 }
 
@@ -295,75 +235,87 @@ fn parse_two_byte(
     lower_byte: u8,
     variant: &syn::Variant,
 ) -> proc_macro2::TokenStream {
-    let ident = &variant.ident;
+    let variant_name = &variant.ident;
     let parsed = match &variant.fields {
-        syn::Fields::Unit => {
-            quote! {
-                return std::result::Result::Ok((#enum_name::#variant,1));
-            }
-        }
+        syn::Fields::Unit => parse_unit_field(enum_name, variant_name, 2),
         syn::Fields::Unnamed(fields) => {
-            let size_counter_var = Ident::new("_count", ident.span());
-            let field_list = fields
-                .unnamed
-                .iter()
-                .enumerate()
-                .map(|(i, _)| Ident::new(&format!("v{}", i), ident.span()));
-            let field_parsed_list = fields.unnamed.iter().zip(field_list.clone()).map(|(f, v)| {
-                quote! {
-                    let (#v,size) = #f::parse(&#param_name[#size_counter_var..])?;
-                    #size_counter_var += size;
-                }
-            });
-            let field_list_bracketed = quote! {
-                #enum_name::#ident(#(#field_list),*)
-            };
-            quote! {
-                let mut #size_counter_var :usize = 2;
-                #(#field_parsed_list)*
-                return std::result::Result::Ok((#field_list_bracketed,#size_counter_var));
-            }
+            parse_unnamed_field(fields, enum_name, variant_name, param_name, 2)
         }
-        syn::Fields::Named(named) => {
-            let fields = &named.named;
-            let fields_compiled = fields.iter().map(|f| {
-                let ident = &f.ident;
-                quote! {
-                    self.#ident.compile()
-                }
-            });
-
-            let compiled = quote! {
-                let mut _i = std::vec::Vec::new();
-                #(_i.extend(&#fields_compiled);)*
-                return _i;
-            };
-            let size_counter_var = syn::Ident::new("_count", enum_name.span());
-            let parse_fn_param_name = syn::Ident::new("__bytes", enum_name.span());
-
-            let parsed = fields.iter().map(|f| {
-                let ident = f.ident.as_ref().unwrap();
-                let ty = &f.ty;
-                quote! {
-                    let (#ident,size) = #ty::parse(&#parse_fn_param_name[#size_counter_var..])?;
-                    #size_counter_var += size;
-                }
-            });
-
-            let field_name_list = fields.iter().map(|f| f.ident.as_ref().unwrap());
-
-            quote! {
-                let mut #size_counter_var = 0;
-                #(#parsed)*
-                let _t = #enum_name::#ident{
-                    #(#field_name_list),*
-                };
-                std::result::Result::Ok((_t,#size_counter_var))
-
-            }
-        }
+        syn::Fields::Named(fields) => parse_named_field(fields, enum_name, variant_name, 2),
     };
     quote! {
         #lower_byte =>{#parsed}
+    }
+}
+
+fn parse_unit_field(
+    enum_name: &syn::Ident,
+    variant: &syn::Ident,
+    init_size: usize,
+) -> proc_macro2::TokenStream {
+    quote! {
+        return std::result::Result::Ok((#enum_name::#variant,#init_size));
+    }
+}
+
+fn parse_unnamed_field(
+    fields: &syn::FieldsUnnamed,
+    enum_name: &syn::Ident,
+    variant: &syn::Ident,
+    param_name: &syn::Ident,
+    init_size: usize,
+) -> proc_macro2::TokenStream {
+    let size_counter_var = Ident::new("_count", variant.span());
+    let field_list = fields
+        .unnamed
+        .iter()
+        .enumerate()
+        .map(|(i, _)| Ident::new(&format!("v{}", i), variant.span()));
+    let field_parsed_list = fields.unnamed.iter().zip(field_list.clone()).map(|(f, v)| {
+        quote! {
+            let (#v,size) = #f::parse(&#param_name[#size_counter_var..])?;
+            #size_counter_var += size;
+        }
+    });
+    let field_list_bracketed = quote! {
+        #enum_name::#variant(#(#field_list),*)
+    };
+    quote! {
+        let mut #size_counter_var :usize = #init_size;
+        #(#field_parsed_list)*
+        return std::result::Result::Ok((#field_list_bracketed,#size_counter_var));
+    }
+}
+
+fn parse_named_field(
+    fields: &syn::FieldsNamed,
+    enum_name: &syn::Ident,
+    variant: &syn::Ident,
+    init_size: usize,
+) -> proc_macro2::TokenStream {
+    let fields = &fields.named;
+
+    let size_counter_var = syn::Ident::new("_count", enum_name.span());
+    let parse_fn_param_name = syn::Ident::new("__bytes", enum_name.span());
+
+    let parsed = fields.iter().map(|f| {
+        let ident = f.ident.as_ref().unwrap();
+        let ty = &f.ty;
+        quote! {
+            let (#ident,size) = #ty::parse(&#parse_fn_param_name[#size_counter_var..])?;
+            #size_counter_var += size;
+        }
+    });
+
+    let field_name_list = fields.iter().map(|f| f.ident.as_ref().unwrap());
+
+    quote! {
+        let mut #size_counter_var = #init_size;
+        #(#parsed)*
+        let _t = #enum_name::#variant{
+            #(#field_name_list),*
+        };
+        std::result::Result::Ok((_t,#size_counter_var))
+
     }
 }
