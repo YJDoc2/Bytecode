@@ -186,7 +186,27 @@ fn compile_enum_variant(name: &syn::Ident, i: usize, v: &syn::Variant) -> proc_m
                 }
             }
         }
-        _ => unimplemented!(),
+        syn::Fields::Named(named) => {
+            let fields = &named.named;
+            let field_names = fields.iter().map(|f| f.ident.as_ref().unwrap());
+            let fields_compiled = fields.iter().map(|f| {
+                let ident = &f.ident;
+                quote! {
+                    #ident.compile()
+                }
+            });
+
+            let compiled = quote! {
+                let mut _i = std::vec::Vec::new();
+                #(_i.extend(&#fields_compiled);)*
+                return _i;
+            };
+            quote! {
+                #name::#ident {#(#field_names),* } => {
+                    #compiled
+                }
+            }
+        }
     }
 }
 
@@ -226,7 +246,44 @@ fn parse_single_byte(
                 return std::result::Result::Ok((#field_list_bracketed,#size_counter_var));
             }
         }
-        _ => unimplemented!(),
+        syn::Fields::Named(named) => {
+            let fields = &named.named;
+            let fields_compiled = fields.iter().map(|f| {
+                let ident = &f.ident;
+                quote! {
+                    self.#ident.compile()
+                }
+            });
+
+            let compiled = quote! {
+                let mut _i = std::vec::Vec::new();
+                #(_i.extend(&#fields_compiled);)*
+                return _i;
+            };
+            let size_counter_var = syn::Ident::new("_count", enum_name.span());
+            let parse_fn_param_name = syn::Ident::new("__bytes", enum_name.span());
+
+            let parsed = fields.iter().map(|f| {
+                let ident = f.ident.as_ref().unwrap();
+                let ty = &f.ty;
+                quote! {
+                    let (#ident,size) = #ty::parse(&#parse_fn_param_name[#size_counter_var..])?;
+                    #size_counter_var += size;
+                }
+            });
+
+            let field_name_list = fields.iter().map(|f| f.ident.as_ref().unwrap());
+
+            quote! {
+                let mut #size_counter_var = 0;
+                #(#parsed)*
+                let _t = #enum_name::#ident{
+                    #(#field_name_list),*
+                };
+                std::result::Result::Ok((_t,#size_counter_var))
+
+            }
+        }
     }
 }
 
@@ -267,7 +324,44 @@ fn parse_two_byte(
                 return std::result::Result::Ok((#field_list_bracketed,#size_counter_var));
             }
         }
-        _ => unimplemented!(),
+        syn::Fields::Named(named) => {
+            let fields = &named.named;
+            let fields_compiled = fields.iter().map(|f| {
+                let ident = &f.ident;
+                quote! {
+                    self.#ident.compile()
+                }
+            });
+
+            let compiled = quote! {
+                let mut _i = std::vec::Vec::new();
+                #(_i.extend(&#fields_compiled);)*
+                return _i;
+            };
+            let size_counter_var = syn::Ident::new("_count", enum_name.span());
+            let parse_fn_param_name = syn::Ident::new("__bytes", enum_name.span());
+
+            let parsed = fields.iter().map(|f| {
+                let ident = f.ident.as_ref().unwrap();
+                let ty = &f.ty;
+                quote! {
+                    let (#ident,size) = #ty::parse(&#parse_fn_param_name[#size_counter_var..])?;
+                    #size_counter_var += size;
+                }
+            });
+
+            let field_name_list = fields.iter().map(|f| f.ident.as_ref().unwrap());
+
+            quote! {
+                let mut #size_counter_var = 0;
+                #(#parsed)*
+                let _t = #enum_name::#ident{
+                    #(#field_name_list),*
+                };
+                std::result::Result::Ok((_t,#size_counter_var))
+
+            }
+        }
     };
     quote! {
         #lower_byte =>{#parsed}
