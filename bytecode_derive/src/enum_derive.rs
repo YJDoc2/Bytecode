@@ -42,8 +42,9 @@ pub fn derive_enum(name: &syn::Ident, input_enum: &syn::DataEnum) -> TokenStream
         // If the number of enum variants are less than 1<<7, all bytecodes generated
         // will be 1 byte length, so we have to only check the first byte
         let _max = max_possible_instructions as u8;
+        // .+ max, as counting starts at 0
         quote! {
-            if #parse_fn_param_name[0] > #_max{
+            if #parse_fn_param_name[0] >= #_max{
                 return std::result::Result::Err(bytecode::BytecodeError::InvalidInstruction);
             }
         }
@@ -197,7 +198,7 @@ fn compile_enum_variant(name: &syn::Ident, i: usize, v: &syn::Variant) -> proc_m
             });
 
             let compiled = quote! {
-                let mut _i = std::vec::Vec::new();
+                let mut _i = #instr;
                 #(_i.extend(&#fields_compiled);)*
                 return _i;
             };

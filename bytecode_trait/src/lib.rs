@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub enum BytecodeError {
     EmptyInstruction,
     InvalidInstruction,
