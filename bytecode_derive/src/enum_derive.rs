@@ -38,11 +38,12 @@ pub fn derive_enum(name: &syn::Ident, input_enum: &syn::DataEnum) -> TokenStream
     // in the parse method impl.
     // If this check fails, we can quickly exit the compile method
     // with appropriate error
+    // <=, as max_possible_instruction is total number of enum variants, which start from 1
     let parse_check_logic = if max_possible_instructions <= 1 << 7 {
         // If the number of enum variants are less than 1<<7, all bytecodes generated
         // will be 1 byte length, so we have to only check the first byte
         let _max = max_possible_instructions as u8;
-        // .+ max, as counting starts at 0
+        // >= max, as counting starts at 0
         quote! {
             if #parse_fn_param_name[0] >= #_max{
                 return std::result::Result::Err(bytecode::BytecodeError::InvalidInstruction);
@@ -56,10 +57,10 @@ pub fn derive_enum(name: &syn::Ident, input_enum: &syn::DataEnum) -> TokenStream
         // and the u16 formed by both of them must be less than max possible instructions
         let _max = max_possible_instructions as u16;
         quote! {
-            if #parse_fn_param_name[0] > 1<< 7 && #parse_fn_param_name.len() < 2{
+            if #parse_fn_param_name[0] >= 1<< 7 && #parse_fn_param_name.len() < 2{
                 return std::result::Result::Err(bytecode::BytecodeError::IncompleteInstruction);
             }
-            if #parse_fn_param_name[0] > 1<< 7{
+            if #parse_fn_param_name[0] >= 1<< 7{
                 let higher_byte:u8 = #parse_fn_param_name[0] & (1<<7 -1);
                 let lower_byte:u8 = #parse_fn_param_name[1];
                 let instr:u16 = (higher_byte as u16) << 8 | lower_byte as u16;
