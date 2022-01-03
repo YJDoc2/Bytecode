@@ -1,8 +1,12 @@
 use std::convert::TryFrom;
 #[derive(Debug, PartialEq, Eq, Hash)]
+/// This specifies the errors that might occur in parsing the bytecode
 pub enum BytecodeError {
-    EmptyInstruction,
+    /// The instruction is invalid, that is no instruction compiles to this specific instruction byte(s)
     InvalidInstruction,
+    /// The instruction is incomplete, more bytes are expected to complete the parsing
+    IncompleteInstruction,
+    /// Some other error
     Other(&'static str),
 }
 
@@ -23,7 +27,7 @@ impl Bytecodable for u8 {
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
         #[allow(clippy::len_zero)]
         if bytes.len() < 1 {
-            return Err(BytecodeError::InvalidInstruction);
+            return Err(BytecodeError::IncompleteInstruction);
         }
         let bytes: [u8; 1] = [bytes[0]];
         Ok((u8::from_le_bytes(bytes), 1))
@@ -36,7 +40,7 @@ impl Bytecodable for u16 {
     }
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
         if bytes.len() < 2 {
-            return Err(BytecodeError::InvalidInstruction);
+            return Err(BytecodeError::IncompleteInstruction);
         }
         let bytes: [u8; 2] = <[u8; 2]>::try_from(&bytes[0..2]).unwrap();
         Ok((u16::from_le_bytes(bytes), 2))
@@ -49,7 +53,7 @@ impl Bytecodable for u32 {
     }
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
         if bytes.len() < 4 {
-            return Err(BytecodeError::InvalidInstruction);
+            return Err(BytecodeError::IncompleteInstruction);
         }
         let bytes: [u8; 4] = <[u8; 4]>::try_from(&bytes[0..4]).unwrap();
         Ok((u32::from_le_bytes(bytes), 4))
@@ -62,7 +66,7 @@ impl Bytecodable for u64 {
     }
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
         if bytes.len() < 8 {
-            return Err(BytecodeError::InvalidInstruction);
+            return Err(BytecodeError::IncompleteInstruction);
         }
         let bytes: [u8; 8] = <[u8; 8]>::try_from(&bytes[0..8]).unwrap();
         Ok((u64::from_le_bytes(bytes), 8))
@@ -76,7 +80,7 @@ impl Bytecodable for i8 {
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
         #[allow(clippy::len_zero)]
         if bytes.len() < 1 {
-            return Err(BytecodeError::InvalidInstruction);
+            return Err(BytecodeError::IncompleteInstruction);
         }
         let bytes: [u8; 1] = [bytes[0]];
         Ok((i8::from_le_bytes(bytes), 1))
@@ -89,7 +93,7 @@ impl Bytecodable for i16 {
     }
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
         if bytes.len() < 2 {
-            return Err(BytecodeError::InvalidInstruction);
+            return Err(BytecodeError::IncompleteInstruction);
         }
         let bytes: [u8; 2] = <[u8; 2]>::try_from(&bytes[0..2]).unwrap();
         Ok((i16::from_le_bytes(bytes), 2))
@@ -101,6 +105,9 @@ impl Bytecodable for i32 {
         Vec::from(self.to_le_bytes())
     }
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
+        if bytes.len() < 4 {
+            return Err(BytecodeError::IncompleteInstruction);
+        }
         let bytes: [u8; 4] = <[u8; 4]>::try_from(&bytes[0..4]).unwrap();
         Ok((i32::from_le_bytes(bytes), 4))
     }
@@ -111,6 +118,9 @@ impl Bytecodable for i64 {
         Vec::from(self.to_le_bytes())
     }
     fn parse(bytes: &[u8]) -> Result<(Self, usize), BytecodeError> {
+        if bytes.len() < 8 {
+            return Err(BytecodeError::IncompleteInstruction);
+        }
         let bytes: [u8; 8] = <[u8; 8]>::try_from(&bytes[0..8]).unwrap();
         Ok((i64::from_le_bytes(bytes), 8))
     }

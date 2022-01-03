@@ -57,7 +57,7 @@ pub fn derive_enum(name: &syn::Ident, input_enum: &syn::DataEnum) -> TokenStream
         let _max = max_possible_instructions as u16;
         quote! {
             if #parse_fn_param_name[0] > 1<< 7 && #parse_fn_param_name.len() < 2{
-                return std::result::Result::Err(bytecode::BytecodeError::InvalidInstruction);
+                return std::result::Result::Err(bytecode::BytecodeError::IncompleteInstruction);
             }
             if #parse_fn_param_name[0] > 1<< 7{
                 let higher_byte:u8 = #parse_fn_param_name[0] & (1<<7 -1);
@@ -139,7 +139,7 @@ pub fn derive_enum(name: &syn::Ident, input_enum: &syn::DataEnum) -> TokenStream
 
             fn parse(#parse_fn_param_name:&[u8])->std::result::Result<(#name,usize),bytecode::BytecodeError>{
                 if #parse_fn_param_name.len() < 1 {
-                    return std::result::Result::Err(bytecode::BytecodeError::EmptyInstruction);
+                    return std::result::Result::Err(bytecode::BytecodeError::IncompleteInstruction);
                 }
                 #parse_check_logic
 

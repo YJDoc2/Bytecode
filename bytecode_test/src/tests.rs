@@ -49,10 +49,10 @@ fn test_basic_enum_parse() {
     assert_eq!(err1, Err(BytecodeError::InvalidInstruction));
 
     let err2 = TestBasicEnum::parse(&err2);
-    assert_eq!(err2, Err(BytecodeError::InvalidInstruction));
+    assert_eq!(err2, Err(BytecodeError::IncompleteInstruction));
 
     let err3 = TestBasicEnum::parse(&[]);
-    assert_eq!(err3, Err(BytecodeError::EmptyInstruction));
+    assert_eq!(err3, Err(BytecodeError::IncompleteInstruction));
 }
 
 #[test]
@@ -111,11 +111,11 @@ fn test_composite_enum_parse() {
     assert_eq!(err1, Err(BytecodeError::InvalidInstruction));
 
     let err2 = TestCompositeEnum::parse(&err2);
-    assert_eq!(err2, Err(BytecodeError::EmptyInstruction));
+    assert_eq!(err2, Err(BytecodeError::IncompleteInstruction));
 
     let err3 = TestCompositeEnum::parse(&err3);
-    assert_eq!(err3, Err(BytecodeError::InvalidInstruction));
+    assert_eq!(err3, Err(BytecodeError::IncompleteInstruction));
 
     let err4 = TestCompositeEnum::parse(&err4);
-    assert_eq!(err4, Err(BytecodeError::InvalidInstruction));
+    assert_eq!(err4, Err(BytecodeError::IncompleteInstruction));
 }
