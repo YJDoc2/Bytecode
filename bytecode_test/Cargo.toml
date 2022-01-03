@@ -1,7 +1,11 @@
 [package]
 name = "bytecode_test"
 version = "0.0.0"
+authors = ["Yashodhan Joshi"]
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Contains tests for bytecode derive macro."
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

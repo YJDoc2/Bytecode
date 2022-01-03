@@ -1,7 +1,11 @@
 [package]
 name = "bytecode_derive"
 version = "0.0.0"
+authors = ["Yashodhan Joshi"]
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Contains derive macro functions for bytecode macro derivation"
+readme = "README.md"
 
 [lib]
 name = "bytecode_derive"
