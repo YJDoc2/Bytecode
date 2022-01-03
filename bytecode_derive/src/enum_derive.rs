@@ -44,7 +44,7 @@ pub fn derive_enum(name: &syn::Ident, input_enum: &syn::DataEnum) -> TokenStream
         let _max = max_possible_instructions as u8;
         quote! {
             if #parse_fn_param_name[0] > #_max{
-                return std::result::Result::Err(bytecode_trait::BytecodeError::InvalidInstruction);
+                return std::result::Result::Err(bytecode::BytecodeError::InvalidInstruction);
             }
         }
     } else {
@@ -56,14 +56,14 @@ pub fn derive_enum(name: &syn::Ident, input_enum: &syn::DataEnum) -> TokenStream
         let _max = max_possible_instructions as u16;
         quote! {
             if #parse_fn_param_name[0] > 1<< 7 && #parse_fn_param_name.len() < 2{
-                return std::result::Result::Err(bytecode_trait::BytecodeError::InvalidInstruction);
+                return std::result::Result::Err(bytecode::BytecodeError::InvalidInstruction);
             }
             if #parse_fn_param_name[0] > 1<< 7{
                 let higher_byte:u8 = #parse_fn_param_name[0] & (1<<7 -1);
                 let lower_byte:u8 = #parse_fn_param_name[1];
                 let instr:u16 = (higher_byte as u16) << 8 | lower_byte as u16;
                 if instr > #_max {
-                    return std::result::Result::Err(bytecode_trait::BytecodeError::InvalidInstruction);
+                    return std::result::Result::Err(bytecode::BytecodeError::InvalidInstruction);
                 }
             }
         }
@@ -129,16 +129,16 @@ pub fn derive_enum(name: &syn::Ident, input_enum: &syn::DataEnum) -> TokenStream
     let two_byte_parse_logic = two_byte_parse_logic.iter();
 
     let output = quote! {
-        impl bytecode_trait::Bytecodable for #name{
+        impl bytecode::Bytecodable for #name{
             fn compile(&self)->Vec<u8>{
                 match self {
                     #(#compiled ),*
                 }
             }
 
-            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<(#name,usize),bytecode_trait::BytecodeError>{
+            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<(#name,usize),bytecode::BytecodeError>{
                 if #parse_fn_param_name.len() < 1 {
-                    return std::result::Result::Err(bytecode_trait::BytecodeError::EmptyInstruction);
+                    return std::result::Result::Err(bytecode::BytecodeError::EmptyInstruction);
                 }
                 #parse_check_logic
 

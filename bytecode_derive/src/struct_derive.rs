@@ -49,12 +49,12 @@ fn derive_unnamed(
     };
 
     let output = quote! {
-        impl bytecode_trait::Bytecodable for #struct_name{
+        impl bytecode::Bytecodable for #struct_name{
             fn compile(&self)->Vec<u8>{
                 #compiled
             }
 
-            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<(#struct_name,usize),bytecode_trait::BytecodeError>{
+            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<(#struct_name,usize),bytecode::BytecodeError>{
                 let mut #size_counter_var = 0;
                 #(#parsed)*
                 std::result::Result::Ok((Self #field_list_bracketed,#size_counter_var))
@@ -93,12 +93,12 @@ fn derive_named(struct_name: &Ident, fields: &syn::FieldsNamed) -> TokenStream {
     let field_name_list = fields.iter().map(|f| f.ident.as_ref().unwrap());
 
     let output = quote! {
-        impl bytecode_trait::Bytecodable for #struct_name{
+        impl bytecode::Bytecodable for #struct_name{
             fn compile(&self)->Vec<u8>{
                 #compiled
             }
 
-            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<(#struct_name,usize),bytecode_trait::BytecodeError>{
+            fn parse(#parse_fn_param_name:&[u8])->std::result::Result<(#struct_name,usize),bytecode::BytecodeError>{
                 let mut #size_counter_var = 0;
                 #(#parsed)*
                 let _t = Self{

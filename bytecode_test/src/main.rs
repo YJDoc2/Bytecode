@@ -1,4 +1,4 @@
-use bytecode::*;
+use bytecode::Bytecode;
 use seq_macro::seq;
 
 #[derive(Bytecode)]
