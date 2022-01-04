@@ -10,6 +10,19 @@ Note : The values of the fields are compiled as little-endian values, so in the 
 
 ## Example
 
+Cargo.toml
+
+```toml
+...
+[dependencies]
+...
+bytecode = {git = "https://github.com/YJDoc2/Bytecode" }
+...
+
+```
+
+Code
+
 ```rust
 use bytecode::{Bytecode,Bytecodable};
 
