@@ -24,51 +24,52 @@ bytecode = {git = "https://github.com/YJDoc2/Bytecode" }
 Code
 
 ```rust
-use bytecode::{Bytecode,Bytecodable};
+use bytecode::{Bytecodable, Bytecode};
 
-#[derive(Bytecode, Debug)]
-pub enum Register{
+#[derive(Bytecode, Debug, PartialEq, Eq)]
+pub enum Register {
     AX,
     BX,
     CX,
-    DX
+    DX,
 }
 
-#[derive(Bytecode,Debug)]
-pub struct Mem{
+#[derive(Bytecode, Debug, PartialEq, Eq)]
+pub struct Mem {
     segment: Register,
     offset: Register,
-    imOffset: u16
+    imOffset: u16,
 }
 
-#[derive(Bytecode,Debug)]
-pub enum Opcode{
+#[derive(Bytecode, Debug, PartialEq, Eq)]
+pub enum Opcode {
     Hlt,
     Nop,
-    Add(Register,Register),
-    AddI(Register,u16),
-    AddM(Register,Mem),
+    Add(Register, Register),
+    AddI(Register, u16),
+    AddM(Register, Mem),
 }
 
-fn main(){
-    let op1 = Opcode::AddI(Register::AX,57);
+fn main() {
+    let op1 = Opcode::AddI(Register::AX, 57);
     let compiled = op1.compile();
 
     // This is for the example,
     // actually you might use parse on a already compiled
     // values, to parse them back into the enum variant
-    let bytes = [4,2,1,3,0x75,0x00];
-    let op2 = Opcode::Parse(&bytes);
+    let bytes = [4, 2, 1, 3, 0x75, 0x00];
+    let op2 = Opcode::parse(&bytes);
     let op2_test = Opcode::AddM(
         Register::CX,
-        Mem:{
+        Mem {
             segment: Register::BX,
             offset: Register::DX,
-            imOffset: 0x0075
-        }
+            imOffset: 0x0075,
+        },
     );
-    assert_eq!(op2, Ok((op2_test,6)));
+    assert!(op2 == Ok((op2_test, 6)));
 }
+
 
 ```
 
