@@ -2,8 +2,7 @@
 members = [
     "bytecode",
     "bytecode_derive",
-    "bytecode_trait",
-    "bytecode_test"
+    "bytecode_trait"
 ]
 
 

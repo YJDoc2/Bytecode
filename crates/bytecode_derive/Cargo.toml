@@ -1,11 +1,13 @@
 [package]
 name = "bytecode_derive"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Yashodhan Joshi"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Contains derive macro functions for bytecode macro derivation"
 readme = "README.md"
+homepage= "https://github.com/YJDoc2/Bytecode"
+repository = "https://github.com/YJDoc2/Bytecode"
 
 [lib]
 name = "bytecode_derive"
@@ -15,5 +17,5 @@ proc-macro = true
 syn = {version = "1.0.82", features=["extra-traits"] }
 quote = "1.0.10"
 proc-macro2 = "1.0.33"
-bytecode_trait = {path="../bytecode_trait"}
+bytecode_trait = {path="../bytecode_trait", version="0.0.1"}
 
