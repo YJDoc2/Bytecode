@@ -8,6 +8,8 @@ description = "Macro to generate bytecode from enums and structs, and to parse t
 readme = "README.md"
 homepage= "https://github.com/YJDoc2/Bytecode"
 repository = "https://github.com/YJDoc2/Bytecode"
+keywords = ["bytecode","compiler"]
+categories = ["compilers"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -8,6 +8,8 @@ description = "Contains derive macro functions for bytecode macro derivation"
 readme = "README.md"
 homepage= "https://github.com/YJDoc2/Bytecode"
 repository = "https://github.com/YJDoc2/Bytecode"
+keywords = ["bytecode","compiler"]
+categories = ["compilers"]
 
 [lib]
 name = "bytecode_derive"
